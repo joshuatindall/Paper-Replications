@@ -1,0 +1,3 @@
+data/*
+!data/splits/**/*.pkl
+!data/stats/*.json
