@@ -1,3 +1,4 @@
+# src/data/datasets.py
 import os
 import numpy as np
 import torch
@@ -233,24 +234,63 @@ def load_dataset_split(dataset_name, split_id, root='./data', splits_dir='./data
     
     return train_subset, test_set
 
-class MemorizationDataset(Dataset):
-    """Custom dataset wrapper that provides unique identifiers for each sample."""
+class DiffMemDataset(Dataset):
+    """
+    Dataset wrapper that handles both diffusion model training requirements
+    and memorization analysis needs.
     
-    def __init__(self, dataset):
+    Args:
+        dataset: Base dataset
+        mode: Operating mode - 'diffusion' (return normalized images only) 
+              or 'memorization' (return image, label, id) or 'both' (all info)
+    """
+    def __init__(self, dataset, mode='diffusion'):
         self.dataset = dataset
-        
-    def __getitem__(self, idx):
-        x, y = self.dataset[idx]
-        # Return (image, label, unique_id)
-        return x, y, idx
+        assert mode in ['diffusion', 'memorization', 'both'], f"Unknown mode: {mode}"
+        self.mode = mode
         
     def __len__(self):
         return len(self.dataset)
+        
+    def __getitem__(self, idx):
+        # Get item from the underlying dataset
+        data = self.dataset[idx]
+        
+        # Extract image and label
+        if isinstance(data, tuple) and len(data) >= 2:
+            image, label = data[0], data[1]
+        else:
+            image = data
+            label = -1  # Unknown label
+            
+        # Convert image to float if needed
+        if not isinstance(image, torch.FloatTensor) and isinstance(image, torch.Tensor):
+            image = image.float()
+            
+        # Normalize to [0, 1] for diffusion models
+        if self.mode in ['diffusion', 'both']:
+            if image.min() < 0 or image.max() > 1:
+                # If images are in [-1, 1] range (common normalization)
+                if image.min() >= -1.1 and image.max() <= 1.1:
+                    normalized_image = (image + 1) / 2
+                else:
+                    # Otherwise, use min-max normalization
+                    normalized_image = (image - image.min()) / (image.max() - image.min() + 1e-8)
+            else:
+                normalized_image = image
+        
+        # Return appropriate data based on mode
+        if self.mode == 'diffusion':
+            return normalized_image
+        elif self.mode == 'memorization':
+            return image, label, idx
+        else:  # 'both'
+            return normalized_image, image, label, idx
 
 def get_dataloader(dataset, batch_size, shuffle=True):
     """Create a dataloader with appropriate configuration."""
     return DataLoader(
-        MemorizationDataset(dataset),
+        dataset,
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=2,
