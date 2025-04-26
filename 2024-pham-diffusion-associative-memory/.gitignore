@@ -1,3 +1,5 @@
 data/*
 !data/splits/**/*.pkl
 !data/stats/*.json
+
+__pycache__/
