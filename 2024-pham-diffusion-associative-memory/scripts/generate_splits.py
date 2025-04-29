@@ -4,7 +4,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data.datasets import generate_dataset_splits
+from src.datasets import generate_dataset_splits
 
 def main():
     parser = argparse.ArgumentParser(description='Generate dataset splits for diffusion training')

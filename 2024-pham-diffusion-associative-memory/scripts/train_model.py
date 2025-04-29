@@ -13,7 +13,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
 # Import training function
-from src.training.train_utils import train_model
+from src.training import train_model
 
 
 if __name__ == "__main__":

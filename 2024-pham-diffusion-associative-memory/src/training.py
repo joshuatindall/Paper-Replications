@@ -11,8 +11,8 @@ from pathlib import Path
 from tqdm import tqdm
 
 # Import project modules
-from src.data.datasets import load_dataset_split, DiffMemDataset
-from src.models.diffusion import create_model
+from src.datasets import load_dataset_split, DiffMemDataset
+from src.model_utils import create_model
 
 # Optional wandb import
 try:
